@@ -15,7 +15,7 @@ python .\backup_wsl.py
 - Backs up the WSL distribution (default: `Ubuntu`) via `wsl --export`
 - Saves to `E:\WSL-Backups\<distro>-backup-<timestamp>.tar`
 - **Shuts down all WSL distributions** before exporting (closes terminals, OpenCode, etc.)
-- Requires drive `E:` (USB‑SSD etc. ) to be mounted
+- Requires drive `E:` (USB‑SSD) to be mounted
 
 ## Key conventions
 
@@ -42,3 +42,7 @@ See [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for the full rest
 1. Ensure drive `E:` is mounted.
 2. Run the backup script.
 3. To restore, follow the steps in `wsl-backup-and-restore.md`.
+
+## Disclaimer
+
+**Use at your own risk.** The repository maintainer is not responsible for any data loss, corruption, or damage resulting from the use or misuse of this script or accompanying guides. WSL backup/restore involves the entire Linux filesystem and can be large; ensure you have adequate storage and have verified backups before performing `wsl --unregister` or restoring. Always save your work before running the script, as it shuts down all WSL distributions. Keep separate copies of important data whenever possible.
