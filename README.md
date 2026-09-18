@@ -12,7 +12,7 @@ python .\backup_wsl.py
 
 ## What it does
 
-- Backs up the WSL distribution (default: `Ubuntu-24.04`) via `wsl --export`
+- Backs up the WSL distribution (default: `Ubuntu`) via `wsl --export`
 - Saves to `E:\WSL-Backups\<distro>-backup-<timestamp>.tar`
 - **Shuts down all WSL distributions** before exporting (closes terminals, OpenCode, etc.)
 - Requires drive `E:` (USB‑SSD etc. ) to be mounted
