@@ -33,6 +33,25 @@ You can change the backup drive or folder by editing the `BACKUP_FOLDER` variabl
 - Script **shuts down WSL** — save work in all Linux terminals/apps first
 - Backup file size is the entire distro filesystem — may be large
 
+## One-time vs repeatable backups
+
+Microsoft's command is the essential backup operation:
+
+```powershell
+wsl --export Ubuntu-24.04 "E:\WSL-Backups\Ubuntu-24.04-backup.tar"
+```
+
+The Python script simply automates that command by:
+
+- Checking that the E: drive exists.
+- Creating `E:\WSL-Backups`.
+- Adding the current date and time to the filename.
+- Running `wsl --shutdown`.
+- Running `wsl --export`.
+- Checking that the backup file was created.
+
+If you only need a one‑time backup, use Microsoft's direct command. The Python version is useful when you want repeatable, timestamped backups with one command.
+
 ## Restoring
 
 See [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for the full restore flow (uses `wsl --import`).
