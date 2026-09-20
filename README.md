@@ -4,6 +4,8 @@ A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, 
 
 ## Quick start
 
+First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for how to find it and more examples).
+
 ```powershell
 # From the repo root:
 python .\backup_wsl.py
@@ -13,8 +15,12 @@ python .\backup_wsl.py
 Common variations:
 
 ```powershell
+# Other distributions (any installed distribution works)
+python .\backup_wsl.py --distro Debian
+python .\backup_wsl.py --distro archlinux
+
 # Different distribution and backup folder
-python .\backup_wsl.py --distro Ubuntu-24.04 --backup-root D:\WSL-Backups
+python .\backup_wsl.py --distro archlinux --backup-root D:\WSL-Backups
 
 # Run all checks without shutting down WSL or exporting anything
 python .\backup_wsl.py --dry-run
@@ -24,7 +30,7 @@ python .\backup_wsl.py --dry-run
 
 | Option | Description |
 | --- | --- |
-| `--distro NAME` | WSL distribution to back up, exactly as shown by `wsl --list --verbose` (default: `Ubuntu`) |
+| `--distro NAME` | WSL distribution to back up, exactly as shown by `wsl --list --verbose` (default: `Ubuntu-24.04`) |
 | `--backup-root PATH` | Folder where the backup is saved (default: `E:\WSL-Backups`) |
 | `-y`, `--yes` | Skip the confirmation prompt before shutting down WSL (for automation) |
 | `--dry-run` | Run all checks and show what would happen; does not shut down WSL, create folders, or export |
@@ -35,7 +41,7 @@ Run `python .\backup_wsl.py --help` to see the same list.
 ## What it does
 
 - Backs up the WSL distribution via `wsl --export`
-- Saves to `<backup-root>\<distro>-backup-<timestamp>.tar` (default: `E:\WSL-Backups\Ubuntu-backup-<timestamp>.tar`)
+- Saves to `<backup-root>\<distro>-backup-<timestamp>.tar` (default: `E:\WSL-Backups\Ubuntu-24.04-backup-<timestamp>.tar`)
 - Checks that `wsl.exe` exists, that the backup drive is available, and that the distribution is installed (exact name match)
 - Compares the distribution's used space with the free space on the backup drive (an estimate; see below)
 - **Asks for confirmation, then shuts down all WSL distributions** before exporting (closes terminals, editors, desktop sessions, etc.)
@@ -60,6 +66,20 @@ Read this before using the script:
 - **Keep the backup drive connected** for the whole export.
 - **Test a backup before relying on it.** Import it as a separate distribution first (see the guide), and never run `wsl --unregister` on the original until you have verified the backup.
 
+## Troubleshooting
+
+**Error: `WSL distribution 'Ubuntu-24.04' was not found`**
+
+The name must match exactly (case does not matter). `Ubuntu` does not match `Ubuntu-24.04`. Run `wsl --list --verbose`, copy the name from the `NAME` column (ignore the `*` default marker), and pass it:
+
+```powershell
+python .\backup_wsl.py --distro Ubuntu
+```
+
+Put names that contain spaces in quotes. If the name matches exactly and the script still cannot find it, see the Troubleshooting section of [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for a command that shows the raw output the script receives.
+
+**Other errors:** a missing backup drive, a free-space warning, a missing `wsl.exe`, and the confirmation prompt are explained in the same section of the guide.
+
 ## Common gotchas
 
 - The script **fails** if the backup drive is not accessible. Connect or mount it first (for example, the USB-SSD for `E:\`).
@@ -71,7 +91,7 @@ Read this before using the script:
 Microsoft's command is the essential backup operation:
 
 ```powershell
-wsl --export Ubuntu "E:\WSL-Backups\Ubuntu-backup.tar"
+wsl --export Ubuntu-24.04 "E:\WSL-Backups\Ubuntu-24.04-backup.tar"
 ```
 
 The Python script automates that command by:

@@ -32,7 +32,11 @@ Save your work before running the script because it will close:
 - Linux applications
 - Background Linux services
 
-## 1. Check the WSL Distribution Name
+## 1. Find Your WSL Distribution Name
+
+The script needs the exact name of the distribution you want to back up. The script's default is `Ubuntu-24.04`, which is the most likely name on a current setup. Yours may be different, so check it first.
+
+### See which distributions are installed
 
 Open **PowerShell** and run:
 
@@ -43,19 +47,90 @@ wsl --list --verbose
 Example output:
 
 ```text
-  NAME      STATE           VERSION
-* Ubuntu    Running         2
+  NAME            STATE           VERSION
+* Ubuntu-24.04    Running         2
+  archlinux       Stopped         2
 ```
 
-This guide uses `Ubuntu` as the distribution name.
+- `NAME` is the value you pass to `--distro`. Copy it exactly.
+- `STATE` shows whether the distribution is `Running` or `Stopped`.
+- `VERSION` is the WSL version (1 or 2).
+- The `*` marks the default distribution, the one `wsl` starts when you give no name. It is not part of the name.
 
-If your distribution has a different name, pass it with `--distro` when you run the script (step 4):
+### See which distribution you are in right now
+
+Inside a Linux terminal, run:
+
+```bash
+echo $WSL_DISTRO_NAME
+```
+
+This prints the name of the distribution you are currently using. To see your Linux user name, run:
+
+```bash
+whoami
+```
+
+### See the WSL default distribution and version
 
 ```powershell
-python .\backup_wsl.py --distro Ubuntu-24.04
+wsl --status
 ```
 
-The name must match exactly. If you use a different name, also replace `Ubuntu` in the example commands below.
+This shows the default distribution and the default WSL version.
+
+### See which distributions are available to install
+
+```powershell
+wsl --list --online
+```
+
+Example (the list is longer and changes over time):
+
+```text
+NAME               FRIENDLY NAME
+Debian             Debian GNU/Linux
+Ubuntu-24.04       Ubuntu 24.04 LTS
+archlinux          Arch Linux
+kali-linux         Kali Linux Rolling
+FedoraLinux-44     Fedora Linux 44
+OracleLinux_9_5    Oracle Linux 9.5
+```
+
+This is only what you *can* install. The script can only back up distributions that appear in `wsl --list --verbose`.
+
+### Use a different distribution
+
+If your distribution is not `Ubuntu-24.04`, pass its name with `--distro` when you run the script (step 4). The script works the same way for every distribution:
+
+```powershell
+# Default: Ubuntu-24.04, saved to E:\WSL-Backups
+python .\backup_wsl.py
+
+# Other distributions
+python .\backup_wsl.py --distro Ubuntu-22.04
+python .\backup_wsl.py --distro Debian
+python .\backup_wsl.py --distro archlinux
+python .\backup_wsl.py --distro kali-linux
+python .\backup_wsl.py --distro FedoraLinux-44
+python .\backup_wsl.py --distro OracleLinux_9_5
+
+# Other distribution and other backup folder
+python .\backup_wsl.py --distro archlinux --backup-root D:\WSL-Backups
+
+# Names with spaces need quotes
+python .\backup_wsl.py --distro "My Distro"
+```
+
+The name must match exactly (upper/lower case does not matter). `Ubuntu` is not the same as `Ubuntu-24.04`.
+
+If you always back up the same non-default distribution, you can change the default near the top of `backup_wsl.py` instead:
+
+```python
+DEFAULT_DISTRO = "archlinux"
+```
+
+This guide uses `Ubuntu-24.04` in its examples. If your name is different, replace it in the commands below, including in the backup file names (`<name>-backup-<timestamp>.tar`).
 
 ## 2. Check That the USB-SSD Is Available
 
@@ -141,10 +216,10 @@ Useful options:
 python .\backup_wsl.py --dry-run
 
 # Different distribution and backup folder
-python .\backup_wsl.py --distro Ubuntu-24.04 --backup-root D:\WSL-Backups
+python .\backup_wsl.py --distro archlinux --backup-root D:\WSL-Backups
 ```
 
-Run `python .\backup_wsl.py --help` for the full list. The defaults are the `Ubuntu` distribution and `E:\WSL-Backups`.
+Run `python .\backup_wsl.py --help` for the full list. The defaults are the `Ubuntu-24.04` distribution and `E:\WSL-Backups`.
 
 The script will automatically:
 
@@ -162,7 +237,7 @@ If the export fails or is cancelled, the script deletes the incomplete file.
 The backup will look similar to:
 
 ```text
-E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar
+E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar
 ```
 
 ## 5. Verify the Backup
@@ -176,13 +251,13 @@ Get-ChildItem "E:\WSL-Backups"
 Check the backup size:
 
 ```powershell
-Get-Item "E:\WSL-Backups\Ubuntu-backup-*.tar"
+Get-Item "E:\WSL-Backups\Ubuntu-24.04-backup-*.tar"
 ```
 
 You can inspect the archive contents:
 
 ```powershell
-tar -tf "E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar" | Select-Object -First 20
+tar -tf "E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar" | Select-Object -First 20
 ```
 
 Replace the filename with the actual backup filename.
@@ -197,10 +272,10 @@ After the backup is complete, start WSL normally:
 wsl
 ```
 
-Or start Ubuntu directly:
+Or start the distribution directly:
 
 ```powershell
-wsl --distribution Ubuntu
+wsl --distribution Ubuntu-24.04
 ```
 
 ## 7. Test the Backup Without Deleting the Original
@@ -218,7 +293,7 @@ Import the backup:
 ```powershell
 wsl --import Ubuntu-Restored `
   "$HOME\wsl-restored" `
-  "E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar" `
+  "E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar" `
   --version 2
 ```
 
@@ -266,7 +341,7 @@ You should see something similar to:
 ```text
   NAME              STATE           VERSION
 * Ubuntu-Restored   Stopped         2
-  Ubuntu            Stopped         2
+  Ubuntu-24.04      Stopped         2
 ```
 
 ### Clean up the test distribution
@@ -287,7 +362,7 @@ Only use this section if you want to replace the current WSL distribution with t
 First, verify that the backup file exists:
 
 ```powershell
-Test-Path "E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar"
+Test-Path "E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar"
 ```
 
 The result must be:
@@ -304,10 +379,10 @@ Shut down WSL:
 wsl --shutdown
 ```
 
-Warning: The following command permanently deletes the current Ubuntu distribution and all files inside it:
+Warning: The following command permanently deletes the current Ubuntu-24.04 distribution and all files inside it:
 
 ```powershell
-wsl --unregister Ubuntu
+wsl --unregister Ubuntu-24.04
 ```
 
 Import the backup:
@@ -315,16 +390,16 @@ Import the backup:
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\wsl-restored-ubuntu"
 
-wsl --import Ubuntu `
+wsl --import Ubuntu-24.04 `
   "$HOME\wsl-restored-ubuntu" `
-  "E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar" `
+  "E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar" `
   --version 2
 ```
 
 Start the restored distribution:
 
 ```powershell
-wsl --distribution Ubuntu
+wsl --distribution Ubuntu-24.04
 ```
 
 ## 9. Set Your Normal Linux User After Import
@@ -373,7 +448,7 @@ Save the file:
 - Press `Enter`
 - Press `Ctrl+X`
 
-Exit Ubuntu:
+Exit the distribution:
 
 ```bash
 exit
@@ -382,8 +457,8 @@ exit
 Restart WSL from PowerShell:
 
 ```powershell
-wsl --terminate Ubuntu
-wsl --distribution Ubuntu
+wsl --terminate Ubuntu-24.04
+wsl --distribution Ubuntu-24.04
 ```
 
 Check the current user:
@@ -410,6 +485,57 @@ py .\backup_wsl.py
 ```
 
 Each run creates a new timestamped backup on the USB-SSD. Delete old backups you no longer need, since each one is a full copy of the distribution.
+
+## Troubleshooting
+
+### Error: WSL distribution 'Ubuntu-24.04' was not found
+
+The script matches the distribution name exactly (upper/lower case does not matter). `Ubuntu` does not match `Ubuntu-24.04`, and the reverse. This is the most common cause.
+
+1. List your distributions:
+
+   ```powershell
+   wsl --list --verbose
+   ```
+
+2. Copy the name from the `NAME` column. Ignore the `*` that marks the default distribution.
+3. Run the script with that exact name:
+
+   ```powershell
+   python .\backup_wsl.py --distro Ubuntu
+   ```
+
+   (Here the list showed `Ubuntu`, so that is the name to use.)
+
+If the name contains spaces, put it in quotes: `--distro "My Distro"`.
+
+If the name in the list is exactly the one you passed and the script still cannot find it, run this and keep the output:
+
+```powershell
+python -c "import subprocess; r=subprocess.run(['wsl.exe','--list','--quiet'],capture_output=True); print(r.returncode, r.stdout)"
+```
+
+It shows the raw bytes the script receives from `wsl.exe`, which is what is needed to diagnose a decoding problem.
+
+### Error: The drive E: was not found
+
+Connect or mount the backup drive, or save the backup somewhere else with `--backup-root`:
+
+```powershell
+python .\backup_wsl.py --backup-root D:\WSL-Backups
+```
+
+### Error: There may not be enough free space for the backup
+
+The script compares the space used inside the distribution with the free space on the backup drive. Free up space, choose another `--backup-root`, or use `--skip-space-check` if you know the backup will fit. The check is an estimate, so it can be wrong in either direction.
+
+### Error: wsl.exe was not found
+
+The script only works on Windows with WSL installed. Run it from PowerShell on Windows, not from inside Linux.
+
+### Backup was cancelled at the confirmation prompt
+
+The script asks before shutting down WSL. Answer `y` to continue, or run it with `--yes` to skip the prompt.
 
 ## Important Safety Notes
 

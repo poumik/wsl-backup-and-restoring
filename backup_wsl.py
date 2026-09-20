@@ -7,9 +7,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Defaults. Override them on the command line instead of editing this file:
-#   python backup_wsl.py --distro Ubuntu-24.04 --backup-root D:\WSL-Backups
+#   python backup_wsl.py --distro Debian --backup-root D:\WSL-Backups
 # Check the distribution name with: wsl --list --verbose
-DEFAULT_DISTRO = "Ubuntu"
+DEFAULT_DISTRO = "Ubuntu-24.04"
 DEFAULT_BACKUP_ROOT = Path(r"E:\WSL-Backups")
 
 
