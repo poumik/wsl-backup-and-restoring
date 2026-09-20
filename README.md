@@ -7,7 +7,7 @@ A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, 
 First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for how to find it and more examples).
 
 ```powershell
-# From the repo root (or where ever you have saved the .py file in):
+# From the repo root (or wherever you saved the .py file):
 python .\backup_wsl.py
 # or: py .\backup_wsl.py
 ```
@@ -31,7 +31,7 @@ python .\backup_wsl.py --dry-run
 | Option | Description |
 | --- | --- |
 | `--distro NAME` | WSL distribution to back up, exactly as shown by `wsl --list --verbose` (default: `Ubuntu-24.04`) |
-| `--backup-root PATH` | Folder where the backup is saved (default: `E:\WSL-Backups`) |
+| `--backup-root PATH` | Full backup location — drive letter and folder name (default: `E:\WSL-Backups`) |
 | `-y`, `--yes` | Skip the confirmation prompt before shutting down WSL (for automation) |
 | `--dry-run` | Run all checks and show what would happen; does not shut down WSL, create folders, or export |
 | `--skip-space-check` | Skip the free-space check |
@@ -112,7 +112,7 @@ The script only creates backups. Restoring is manual: see [`wsl-backup-and-resto
 
 ## Usage
 
-1. Make sure the backup drive (E:/ is default) is connected. You may change the drive letter (in .py) according to your needs.
+1. Make sure the backup drive is connected. The default location is `E:\WSL-Backups`; both the drive letter and the folder name can be changed with `--backup-root` (or by editing `DEFAULT_BACKUP_ROOT` in `backup_wsl.py`).
 2. Run the backup script (optionally with `--dry-run` first).
 3. To restore, follow the steps in `wsl-backup-and-restore.md`.
 
