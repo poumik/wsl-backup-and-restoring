@@ -22,7 +22,7 @@ The Python script automatically runs:
 wsl.exe --shutdown
 ```
 
-This stops all running WSL distributions before creating the backup.
+This stops all running WSL distributions before creating the backup. The script asks for confirmation first (answer `y`), unless you run it with `--yes`.
 
 Save your work before running the script because it will close:
 
@@ -49,19 +49,13 @@ Example output:
 
 This guide uses `Ubuntu` as the distribution name.
 
-If your distribution has a different name, change this line in the Python script:
+If your distribution has a different name, pass it with `--distro` when you run the script (step 4):
 
-```python
-DISTRO_NAME = "Ubuntu"
+```powershell
+python .\backup_wsl.py --distro Ubuntu-24.04
 ```
 
-For example:
-
-```python
-DISTRO_NAME = "Ubuntu-24.04"
-```
-
-The name must match exactly. If you change it, also replace `Ubuntu` in the example commands below.
+The name must match exactly. If you use a different name, also replace `Ubuntu` in the example commands below.
 
 ## 2. Check That the USB-SSD Is Available
 
@@ -76,6 +70,8 @@ The result should be:
 ```text
 True
 ```
+
+If you want to save backups to a different drive or folder, pass `--backup-root` when you run the script (step 4).
 
 ## 3. Get the Script
 
@@ -138,15 +134,28 @@ If `python` is not recognized, try:
 py .\backup_wsl.py
 ```
 
+Useful options:
+
+```powershell
+# Preview: run all checks without shutting down WSL or exporting
+python .\backup_wsl.py --dry-run
+
+# Different distribution and backup folder
+python .\backup_wsl.py --distro Ubuntu-24.04 --backup-root D:\WSL-Backups
+```
+
+Run `python .\backup_wsl.py --help` for the full list. The defaults are the `Ubuntu` distribution and `E:\WSL-Backups`.
+
 The script will automatically:
 
-1. Check that drive `E:` exists.
-2. Create `E:\WSL-Backups` if necessary.
-3. Check that the WSL distribution exists.
-4. Shut down WSL.
-5. Export the complete distribution.
-6. Create a timestamped backup.
-7. Verify that the backup file is not empty.
+1. Check that `wsl.exe` exists and that the backup drive is available.
+2. Check that the WSL distribution exists.
+3. Estimate the backup size and compare it with the free space on the backup drive.
+4. Ask you to confirm shutting down WSL (skipped with `--yes`).
+5. Create the backup folder (default `E:\WSL-Backups`) if necessary.
+6. Shut down WSL.
+7. Export the complete distribution to a timestamped backup.
+8. Verify that the backup file is not empty and show its size and the elapsed time.
 
 If the export fails or is cancelled, the script deletes the incomplete file.
 

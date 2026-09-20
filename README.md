@@ -10,32 +10,61 @@ python .\backup_wsl.py
 # or: py .\backup_wsl.py
 ```
 
+Common variations:
+
+```powershell
+# Different distribution and backup folder
+python .\backup_wsl.py --distro Ubuntu-24.04 --backup-root D:\WSL-Backups
+
+# Run all checks without shutting down WSL or exporting anything
+python .\backup_wsl.py --dry-run
+```
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `--distro NAME` | WSL distribution to back up, exactly as shown by `wsl --list --verbose` (default: `Ubuntu`) |
+| `--backup-root PATH` | Folder where the backup is saved (default: `E:\WSL-Backups`) |
+| `-y`, `--yes` | Skip the confirmation prompt before shutting down WSL (for automation) |
+| `--dry-run` | Run all checks and show what would happen; does not shut down WSL, create folders, or export |
+| `--skip-space-check` | Skip the free-space check |
+
+Run `python .\backup_wsl.py --help` to see the same list.
+
 ## What it does
 
-- Backs up the WSL distribution (default: `Ubuntu`) via `wsl --export`
-- Saves to `E:\WSL-Backups\<distro>-backup-<timestamp>.tar`
-- **Shuts down all WSL distributions** before exporting (closes terminals, editors, desktop sessions, etc.)
-- Requires drive `E:` (USB-SSD) to be mounted
+- Backs up the WSL distribution via `wsl --export`
+- Saves to `<backup-root>\<distro>-backup-<timestamp>.tar` (default: `E:\WSL-Backups\Ubuntu-backup-<timestamp>.tar`)
+- Checks that `wsl.exe` exists, that the backup drive is available, and that the distribution is installed (exact name match)
+- Compares the distribution's used space with the free space on the backup drive (an estimate; see below)
+- **Asks for confirmation, then shuts down all WSL distributions** before exporting (closes terminals, editors, desktop sessions, etc.)
+- Verifies the backup file exists and is not empty, and prints its size and the elapsed time
 - Removes the partial `.tar` file if the export fails or is cancelled
 
 ## Key conventions
 
-- Set the `DISTRO_NAME` variable at the top of `backup_wsl.py` (default `"Ubuntu"`) if your distribution has a different name
-- Run `wsl --list --verbose` to see installed distributions
-- The distribution name must match exactly (for example, `Ubuntu` does not match `Ubuntu-24.04`)
-- Backup folder: `E:\WSL-Backups` (created automatically if missing)
+- The defaults are the `DEFAULT_DISTRO` and `DEFAULT_BACKUP_ROOT` values at the top of `backup_wsl.py`. Use the command-line options for one-off changes, or edit the defaults if you always use the same setup.
+- Run `wsl --list --verbose` to see installed distributions.
+- The distribution name must match exactly (for example, `Ubuntu` does not match `Ubuntu-24.04`).
+- The backup folder is created automatically if missing.
 
-## Custom backup destination
+## Safe operations
 
-You can change the backup drive or folder by editing the `BACKUP_FOLDER` variable in `backup_wsl.py`. The default saves to `E:\WSL-Backups`. Adjust the path as needed (e.g., `C:\Backups` or any other location). The script will create the folder if it does not exist.
+Read this before using the script:
 
-Note: the script also checks that `E:\` exists before it starts. If you change the drive letter, update that check in `main()` as well.
+- **The backup can be huge.** It is the entire Linux filesystem of the distribution, and every run creates a new full copy. Delete old backups you no longer need.
+- **All WSL distributions are shut down**, not just the one being backed up. The script asks for confirmation first; save your work in all Linux terminals and apps before answering `y`. `--yes` skips the prompt.
+- **The free-space check is an estimate.** It compares the used space inside the distribution with the free space on the backup drive. The real `.tar` size can differ. Use `--skip-space-check` if you know it will fit.
+- **There are no automatic retries.** If a backup fails, the incomplete file is removed and you need to run the script again.
+- **Keep the backup drive connected** for the whole export.
+- **Test a backup before relying on it.** Import it as a separate distribution first (see the guide), and never run `wsl --unregister` on the original until you have verified the backup.
 
 ## Common gotchas
 
-- Script will **fail** if `E:\` is not accessible — connect/mount the USB-SSD first
-- Script **shuts down WSL** — save work in all Linux terminals/apps first
-- Backup file size is the entire distro filesystem — may be large, and every run creates a new file, so delete old backups you no longer need
+- The script **fails** if the backup drive is not accessible. Connect or mount it first (for example, the USB-SSD for `E:\`).
+- The script only works on Windows (it needs `wsl.exe`).
+- `--dry-run` may briefly start the distribution to estimate its size, but it does not shut anything down or write a backup.
 
 ## One-time vs repeatable backups
 
@@ -45,13 +74,13 @@ Microsoft's command is the essential backup operation:
 wsl --export Ubuntu "E:\WSL-Backups\Ubuntu-backup.tar"
 ```
 
-The Python script simply automates that command by:
+The Python script automates that command by:
 
-- Checking that the E: drive exists.
-- Creating `E:\WSL-Backups`.
+- Checking that `wsl.exe` and the backup drive are available.
 - Checking that the named distribution is installed.
-- Adding the current date and time to the filename.
-- Running `wsl --shutdown`.
+- Estimating the size and comparing it with the free space.
+- Asking for confirmation, then running `wsl --shutdown`.
+- Adding the current date and time to the filename and creating the backup folder.
 - Running `wsl --export`.
 - Checking that the backup file was created and is not empty.
 
@@ -63,8 +92,8 @@ The script only creates backups. Restoring is manual: see [`wsl-backup-and-resto
 
 ## Usage
 
-1. Ensure drive `E:` is mounted.
-2. Run the backup script.
+1. Make sure the backup drive is connected.
+2. Run the backup script (optionally with `--dry-run` first).
 3. To restore, follow the steps in `wsl-backup-and-restore.md`.
 
 ## Disclaimer
