@@ -7,7 +7,7 @@ A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, 
 First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for how to find it and more examples).
 
 ```powershell
-# From the repo root:
+# From the repo root (or where ever you have saved the .py file in:
 python .\backup_wsl.py
 # or: py .\backup_wsl.py
 ```
