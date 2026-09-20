@@ -1,20 +1,18 @@
 # WSL Backup and Restore Guide
 
-This guide explains how to back up and restore a complete WSL distribution using a Python script.
+This guide explains how to back up and restore a complete WSL distribution using the Python script `backup_wsl.py` from this repository.
 
 The backup is saved directly to the `E:\WSL-Backups` folder on the USB-SSD.
 
 ## What the Backup Includes
 
-The backup includes:
+The backup is a full export of the distribution, including:
 
-- Linux files
-- Installed packages
+- Linux files (all users' home directories)
+- Installed packages and tools (for example, a desktop environment or CLI tools you installed)
 - Users
 - Configuration files
-- OpenCode installation
-- XFCE desktop configuration
-- WSL settings stored inside the distribution
+- WSL settings stored inside the distribution (such as `/etc/wsl.conf`)
 
 ## Important Information
 
@@ -28,9 +26,9 @@ This stops all running WSL distributions before creating the backup.
 
 Save your work before running the script because it will close:
 
-- Ubuntu terminals
-- OpenCode
-- XFCE desktop sessions
+- Linux terminals
+- Editors and tools running inside WSL
+- Desktop sessions running inside WSL
 - Linux applications
 - Background Linux services
 
@@ -63,6 +61,8 @@ For example:
 DISTRO_NAME = "Ubuntu-24.04"
 ```
 
+The name must match exactly. If you change it, also replace `Ubuntu` in the example commands below.
+
 ## 2. Check That the USB-SSD Is Available
 
 Confirm that the USB-SSD is mounted as drive `E:`:
@@ -77,11 +77,11 @@ The result should be:
 True
 ```
 
-## 3. Create a Scripts Folder
+## 3. Get the Script
 
-Save the Python script on your Windows internal drive, not inside WSL or on the backup drive.
+Keep the script on your Windows internal drive, not inside WSL or on the backup drive.
 
-Run:
+Create a scripts folder:
 
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\Documents\Scripts"
@@ -93,142 +93,10 @@ The folder will be:
 C:\Users\YourWindowsUsername\Documents\Scripts
 ```
 
-## 4. Save the Python Backup Script
+Then put `backup_wsl.py` from this repository into that folder, using either method:
 
-Open Notepad:
-
-```powershell
-notepad "$HOME\Documents\Scripts\backup_wsl.py"
-```
-
-Paste the following code into Notepad:
-
-```python
-from pathlib import Path
-from datetime import datetime
-import subprocess
-import sys
-
-
-# Change this if your WSL distribution has a different name.
-# Check the name with: wsl --list --verbose
-DISTRO_NAME = "Ubuntu"
-
-
-# Backup location on the E: USB-SSD drive.
-BACKUP_FOLDER = Path(r"E:\WSL-Backups")
-
-
-# Create a timestamped backup filename.
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-backup_file = BACKUP_FOLDER / f"{DISTRO_NAME}-backup-{timestamp}.tar"
-
-
-def run_command(command):
-    print("Running:", " ".join(str(item) for item in command))
-    subprocess.run(command, check=True)
-
-
-def main():
-    print(f"WSL distribution: {DISTRO_NAME}")
-    print(f"Backup location: {backup_file}")
-    print()
-
-    # Confirm that the E: drive is available.
-    if not Path("E:\\").exists():
-        print("Error: The E: drive was not found.")
-        print("Connect or mount the USB-SSD and try again.")
-        sys.exit(1)
-
-    # Create the backup folder if it does not already exist.
-    BACKUP_FOLDER.mkdir(parents=True, exist_ok=True)
-
-    # Confirm that the selected WSL distribution exists.
-    result = subprocess.run(
-        ["wsl.exe", "--list", "--quiet"],
-        capture_output=True,
-        text=True,
-        errors="replace",
-    )
-
-    if result.returncode != 0:
-        print("Error: Could not list WSL distributions.")
-        sys.exit(1)
-
-    installed_distributions = result.stdout.lower()
-
-    if DISTRO_NAME.lower() not in installed_distributions:
-        print(f"Error: WSL distribution '{DISTRO_NAME}' was not found.")
-        print()
-        print("Run this command to see the installed distributions:")
-        print("wsl --list --verbose")
-        sys.exit(1)
-
-    # Stop WSL before creating the backup.
-    # This closes running WSL terminals, OpenCode, XFCE, and Linux processes.
-    print("Stopping WSL...")
-    run_command(["wsl.exe", "--shutdown"])
-
-    print()
-    print("Creating backup...")
-    print("This may take several minutes.")
-    print()
-
-    # Export the complete WSL distribution to the E: drive.
-    run_command(
-        [
-            "wsl.exe",
-            "--export",
-            DISTRO_NAME,
-            str(backup_file),
-        ]
-    )
-
-    print()
-
-    # Verify that the backup file exists and is not empty.
-    if not backup_file.exists():
-        print("Error: The backup file was not created.")
-        sys.exit(1)
-
-    backup_size = backup_file.stat().st_size
-
-    if backup_size == 0:
-        print("Error: The backup file is empty.")
-        sys.exit(1)
-
-    backup_size_gb = backup_size / (1024 ** 3)
-
-    print("Backup completed successfully.")
-    print(f"Backup file: {backup_file}")
-    print(f"Backup size: {backup_size_gb:.2f} GB")
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except subprocess.CalledProcessError as error:
-        print()
-        print("The backup failed.")
-        print(f"Command returned exit code: {error.returncode}")
-        sys.exit(error.returncode)
-    except KeyboardInterrupt:
-        print()
-        print("Backup cancelled.")
-        sys.exit(1)
-```
-
-Save the file as:
-
-```text
-backup_wsl.py
-```
-
-In Notepad, choose:
-
-```text
-File → Save
-```
+- **Clone the repository** (requires Git) and copy `backup_wsl.py` into the folder, or run the script directly from the cloned repository.
+- **Download the file** from the repository page (the **Raw** view, then **Save as**) and save it as `backup_wsl.py`.
 
 Make sure the filename is exactly:
 
@@ -236,13 +104,21 @@ Make sure the filename is exactly:
 backup_wsl.py
 ```
 
-It must not be saved as:
+It must not end up as:
 
 ```text
 backup_wsl.py.txt
 ```
 
-## 5. Run the Backup Script
+Check with:
+
+```powershell
+Get-ChildItem "$HOME\Documents\Scripts"
+```
+
+Using the file from the repository (instead of copy-pasting it) keeps you on the latest version of the script.
+
+## 4. Run the Backup Script
 
 Open PowerShell and move to the script folder:
 
@@ -272,13 +148,15 @@ The script will automatically:
 6. Create a timestamped backup.
 7. Verify that the backup file is not empty.
 
+If the export fails or is cancelled, the script deletes the incomplete file.
+
 The backup will look similar to:
 
 ```text
 E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar
 ```
 
-## 6. Verify the Backup
+## 5. Verify the Backup
 
 Check that the backup exists:
 
@@ -300,7 +178,9 @@ tar -tf "E:\WSL-Backups\Ubuntu-backup-2026-09-18_14-30-00.tar" | Select-Object -
 
 Replace the filename with the actual backup filename.
 
-## 7. Start WSL Again
+A backup is only proven good once you have imported it successfully. See step 7.
+
+## 6. Start WSL Again
 
 After the backup is complete, start WSL normally:
 
@@ -314,7 +194,7 @@ Or start Ubuntu directly:
 wsl --distribution Ubuntu
 ```
 
-## 8. Test the Backup Without Deleting the Original
+## 7. Test the Backup Without Deleting the Original
 
 It is recommended to test the backup by importing it as a separate WSL distribution.
 
@@ -347,7 +227,7 @@ Check your files:
 ls -la
 ```
 
-Check OpenCode:
+Check the tools you rely on. For example:
 
 ```bash
 which opencode
@@ -380,7 +260,18 @@ You should see something similar to:
   Ubuntu            Stopped         2
 ```
 
-## 9. Restore the Original Distribution
+### Clean up the test distribution
+
+Once you have confirmed the backup works, remove the test copy so it does not keep using disk space.
+
+Warning: this permanently deletes the `Ubuntu-Restored` distribution and everything inside it. Double-check the name first. It does not affect `Ubuntu`.
+
+```powershell
+wsl --unregister Ubuntu-Restored
+Remove-Item -Recurse -Force "$HOME\wsl-restored"
+```
+
+## 8. Restore the Original Distribution
 
 Only use this section if you want to replace the current WSL distribution with the backup.
 
@@ -396,7 +287,7 @@ The result must be:
 True
 ```
 
-Do not continue if the result is `False`.
+Do not continue if the result is `False`. Also make sure you have already tested this backup as described in step 7.
 
 Shut down WSL:
 
@@ -427,7 +318,7 @@ Start the restored distribution:
 wsl --distribution Ubuntu
 ```
 
-## 10. Set Your Normal Linux User After Import
+## 9. Set Your Normal Linux User After Import
 
 Imported WSL distributions may start as the `root` user.
 
@@ -465,6 +356,8 @@ For example:
 default=alex
 ```
 
+If the file already has a `[user]` section, edit it instead of adding a second one.
+
 Save the file:
 
 - Press `Ctrl+O`
@@ -492,7 +385,7 @@ whoami
 
 It should now show your normal Linux username.
 
-## 11. Create Future Backups
+## 10. Create Future Backups
 
 Whenever you want to create another backup, open PowerShell and run:
 
@@ -507,7 +400,7 @@ If necessary, use:
 py .\backup_wsl.py
 ```
 
-Each run creates a new timestamped backup on the USB-SSD.
+Each run creates a new timestamped backup on the USB-SSD. Delete old backups you no longer need, since each one is a full copy of the distribution.
 
 ## Important Safety Notes
 
@@ -516,8 +409,8 @@ Each run creates a new timestamped backup on the USB-SSD.
 - Keep the USB-SSD connected while the backup is running.
 - Do not disconnect the USB-SSD during the export.
 - Keep at least one backup on another drive if possible.
+- Test a backup with a separate import before relying on it.
 - Do not run `wsl --unregister` until you have verified the backup.
 - `wsl --unregister` permanently deletes the selected WSL distribution.
 - The backup file can be large because it includes the entire Linux filesystem.
 - Create a new backup after major changes or installations.
-````_

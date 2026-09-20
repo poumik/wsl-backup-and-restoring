@@ -1,6 +1,6 @@
 # WSL Backup and Restore
 
-A Python script to back up and restore Windows Subsystem for Linux (WSL) distributions.
+A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, plus a guide for restoring it manually with `wsl --import`.
 
 ## Quick start
 
@@ -14,47 +14,52 @@ python .\backup_wsl.py
 
 - Backs up the WSL distribution (default: `Ubuntu`) via `wsl --export`
 - Saves to `E:\WSL-Backups\<distro>-backup-<timestamp>.tar`
-- **Shuts down all WSL distributions** before exporting (closes terminals, OpenCode, etc.)
-- Requires drive `E:` (USB‑SSD) to be mounted
+- **Shuts down all WSL distributions** before exporting (closes terminals, editors, desktop sessions, etc.)
+- Requires drive `E:` (USB-SSD) to be mounted
+- Removes the partial `.tar` file if the export fails or is cancelled
 
 ## Key conventions
 
-- `DISTRO_NAME = "Ubuntu"` in `backup_wsl.py:8` — change if your distro has a different name
+- Set the `DISTRO_NAME` variable at the top of `backup_wsl.py` (default `"Ubuntu"`) if your distribution has a different name
 - Run `wsl --list --verbose` to see installed distributions
+- The distribution name must match exactly (for example, `Ubuntu` does not match `Ubuntu-24.04`)
 - Backup folder: `E:\WSL-Backups` (created automatically if missing)
 
 ## Custom backup destination
 
 You can change the backup drive or folder by editing the `BACKUP_FOLDER` variable in `backup_wsl.py`. The default saves to `E:\WSL-Backups`. Adjust the path as needed (e.g., `C:\Backups` or any other location). The script will create the folder if it does not exist.
 
+Note: the script also checks that `E:\` exists before it starts. If you change the drive letter, update that check in `main()` as well.
+
 ## Common gotchas
 
-- Script will **fail** if `E:\` is not accessible — connect/mount the USB‑SSD first
+- Script will **fail** if `E:\` is not accessible — connect/mount the USB-SSD first
 - Script **shuts down WSL** — save work in all Linux terminals/apps first
-- Backup file size is the entire distro filesystem — may be large
+- Backup file size is the entire distro filesystem — may be large, and every run creates a new file, so delete old backups you no longer need
 
 ## One-time vs repeatable backups
 
 Microsoft's command is the essential backup operation:
 
 ```powershell
-wsl --export Ubuntu-24.04 "E:\WSL-Backups\Ubuntu-24.04-backup.tar"
+wsl --export Ubuntu "E:\WSL-Backups\Ubuntu-backup.tar"
 ```
 
 The Python script simply automates that command by:
 
 - Checking that the E: drive exists.
 - Creating `E:\WSL-Backups`.
+- Checking that the named distribution is installed.
 - Adding the current date and time to the filename.
 - Running `wsl --shutdown`.
 - Running `wsl --export`.
-- Checking that the backup file was created.
+- Checking that the backup file was created and is not empty.
 
-If you only need a one‑time backup, use Microsoft's direct command. The Python version is useful when you want repeatable, timestamped backups with one command.
+If you only need a one-time backup, use Microsoft's direct command. The Python version is useful when you want repeatable, timestamped backups with one command.
 
 ## Restoring
 
-See [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for the full restore flow (uses `wsl --import`).
+The script only creates backups. Restoring is manual: see [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for the full restore flow (uses `wsl --import`), including how to test a backup safely before replacing anything.
 
 ## Usage
 

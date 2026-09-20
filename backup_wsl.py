@@ -20,6 +20,31 @@ def run_command(command):
     subprocess.run(command, check=True)
 
 
+def list_distributions():
+    """Return the installed WSL distribution names, or None on failure.
+
+    wsl.exe writes UTF-16 when its output is captured, so decode the raw
+    bytes ourselves instead of relying on the console code page.
+    """
+    result = subprocess.run(
+        ["wsl.exe", "--list", "--quiet"],
+        capture_output=True,
+    )
+
+    if result.returncode != 0:
+        return None
+
+    raw = result.stdout
+
+    if b"\x00" in raw:
+        text = raw.decode("utf-16-le", errors="replace")
+    else:
+        text = raw.decode("utf-8", errors="replace")
+
+    names = [line.strip().lstrip("\ufeff").replace("\x00", "") for line in text.splitlines()]
+    return [name for name in names if name]
+
+
 def main():
     print(f"WSL distribution: {DISTRO_NAME}")
     print(f"Backup location: {backup_file}")
@@ -34,21 +59,16 @@ def main():
     # Create the backup folder if it does not already exist.
     BACKUP_FOLDER.mkdir(parents=True, exist_ok=True)
 
-    # Confirm that the selected WSL distribution exists.
-    result = subprocess.run(
-        ["wsl.exe", "--list", "--quiet"],
-        capture_output=True,
-        text=True,
-        errors="replace",
-    )
+    # Confirm that the selected WSL distribution exists (exact name match).
+    installed_distributions = list_distributions()
 
-    if result.returncode != 0:
+    if installed_distributions is None:
         print("Error: Could not list WSL distributions.")
         sys.exit(1)
 
-    installed_distributions = result.stdout.lower()
+    installed_lower = [name.lower() for name in installed_distributions]
 
-    if DISTRO_NAME.lower() not in installed_distributions:
+    if DISTRO_NAME.lower() not in installed_lower:
         print(f"Error: WSL distribution '{DISTRO_NAME}' was not found.")
         print()
         print("Run this command to see the installed distributions:")
@@ -65,14 +85,24 @@ def main():
     print()
 
     # Export the complete WSL distribution to the E: drive.
-    run_command(
-        [
-            "wsl.exe",
-            "--export",
-            DISTRO_NAME,
-            str(backup_file),
-        ]
-    )
+    try:
+        run_command(
+            [
+                "wsl.exe",
+                "--export",
+                DISTRO_NAME,
+                str(backup_file),
+            ]
+        )
+    except (subprocess.CalledProcessError, KeyboardInterrupt):
+        # Do not leave a partial file behind that looks like a real backup.
+        if backup_file.exists():
+            try:
+                backup_file.unlink()
+                print("Removed the incomplete backup file.")
+            except OSError:
+                print(f"Warning: Could not remove the incomplete file: {backup_file}")
+        raise
 
     print()
 
