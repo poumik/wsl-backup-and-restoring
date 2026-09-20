@@ -7,7 +7,7 @@ A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, 
 First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for how to find it and more examples).
 
 ```powershell
-# From the repo root (or where ever you have saved the .py file in:
+# From the repo root (or where ever you have saved the .py file in):
 python .\backup_wsl.py
 # or: py .\backup_wsl.py
 ```
@@ -112,7 +112,7 @@ The script only creates backups. Restoring is manual: see [`wsl-backup-and-resto
 
 ## Usage
 
-1. Make sure the backup drive is connected.
+1. Make sure the backup drive (E:/ is default) is connected. You may change the drive letter (in .py) according to your needs.
 2. Run the backup script (optionally with `--dry-run` first).
 3. To restore, follow the steps in `wsl-backup-and-restore.md`.
 
