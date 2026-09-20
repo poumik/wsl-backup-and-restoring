@@ -4,7 +4,7 @@ A Python script that backs up a Windows Subsystem for Linux (WSL) distribution, 
 
 ## Quick start
 
-First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for how to find it and more examples).
+First find your distribution name with `wsl --list --verbose`. The script's default is `Ubuntu-24.04`; if yours is different, pass it with `--distro` (see the guide for details and examples).
 
 ```powershell
 # From the repo root (or wherever you saved the .py file):
@@ -59,9 +59,9 @@ Run `python .\backup_wsl.py --help` to see the same list.
 
 Read this before using the script:
 
-- **The backup can be huge.** It is the entire Linux filesystem of the distribution, and every run creates a new full copy. Delete old backups you no longer need.
+- **The backup may be large.** It is the entire Linux filesystem of the distribution, and every run creates a new full copy. Delete old backups you no longer need.
 - **All WSL distributions are shut down**, not just the one being backed up. The script asks for confirmation first; save your work in all Linux terminals and apps before answering `y`. `--yes` skips the prompt.
-- **The free-space check is an estimate.** It compares the used space inside the distribution with the free space on the backup drive. The real `.tar` size can differ. Use `--skip-space-check` if you know it will fit.
+- **The free-space check provides an estimate.** It compares the used space inside the distribution with the free space on the backup drive. The real `.tar` size can differ. Use `--skip-space-check` if you know it will fit.
 - **There are no automatic retries.** If a backup fails, the incomplete file is removed and you need to run the script again.
 - **Keep the backup drive connected** for the whole export.
 - **Test a backup before relying on it.** Import it as a separate distribution first (see the guide), and never run `wsl --unregister` on the original until you have verified the backup.
@@ -76,7 +76,7 @@ The name must match exactly (case does not matter). `Ubuntu` does not match `Ubu
 python .\backup_wsl.py --distro Ubuntu
 ```
 
-Put names that contain spaces in quotes. If the name matches exactly and the script still cannot find it, see the Troubleshooting section of [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for a command that shows the raw output the script receives.
+Put names that contain spaces in quotes. If the name matches exactly and the script still cannot find it, see the Troubleshooting section in [`wsl-backup-and-restore.md`](./wsl-backup-and-restore.md) for a command to inspect the raw output.
 
 **Other errors:** a missing backup drive, a free-space warning, a missing `wsl.exe`, and the confirmation prompt are explained in the same section of the guide.
 
@@ -104,7 +104,7 @@ The Python script automates that command by:
 - Running `wsl --export`.
 - Checking that the backup file was created and is not empty.
 
-If you only need a one-time backup, use Microsoft's direct command. The Python version is useful when you want repeatable, timestamped backups with one command.
+If you only need a one-time backup, use Microsoft's direct command. The Python script is useful for repeatable, timestamped backups with a single command.
 
 ## Restoring
 

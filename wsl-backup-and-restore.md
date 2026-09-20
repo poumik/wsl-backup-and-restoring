@@ -2,7 +2,7 @@
 
 This guide explains how to back up and restore a complete WSL distribution using the Python script `backup_wsl.py` from this repository.
 
-The backup is saved directly to the `E:\WSL-Backups` folder on the USB-SSD.
+Backups are saved to the `E:\WSL-Backups` folder on the USB-SSD by default.
 
 ## What the Backup Includes
 
@@ -24,7 +24,7 @@ wsl.exe --shutdown
 
 This stops all running WSL distributions before creating the backup. The script asks for confirmation first (answer `y`), unless you run it with `--yes`.
 
-Save your work before running the script because it will close:
+Save your work before running the script, as it will close:
 
 - Linux terminals
 - Editors and tools running inside WSL
@@ -52,7 +52,7 @@ Example output:
   archlinux       Stopped         2
 ```
 
-- `NAME` is the value you pass to `--distro`. Copy it exactly.
+- `NAME` is the value you pass to `--distro`. Copy the name exactly.
 - `STATE` shows whether the distribution is `Running` or `Stopped`.
 - `VERSION` is the WSL version (1 or 2).
 - The `*` marks the default distribution, the one `wsl` starts when you give no name. It is not part of the name.
@@ -122,7 +122,7 @@ python .\backup_wsl.py --distro archlinux --backup-root D:\WSL-Backups
 python .\backup_wsl.py --distro "My Distro"
 ```
 
-The name must match exactly (upper/lower case does not matter). `Ubuntu` is not the same as `Ubuntu-24.04`.
+The name must match exactly (case-insensitive). `Ubuntu` is not the same as `Ubuntu-24.04`.
 
 If you always back up the same non-default distribution, you can change the default near the top of `backup_wsl.py` instead:
 
@@ -130,11 +130,11 @@ If you always back up the same non-default distribution, you can change the defa
 DEFAULT_DISTRO = "archlinux"
 ```
 
-This guide uses `Ubuntu-24.04` in its examples. If your name is different, replace it in the commands below, including in the backup file names (`<name>-backup-<timestamp>.tar`).
+Examples in this guide use `Ubuntu-24.04`. If your name is different, replace it in the commands below, including in the backup file names (`<name>-backup-<timestamp>.tar`).
 
 ## 2. Check That the USB-SSD Is Available
 
-Confirm that the USB-SSD is mounted as drive `E:`:
+Verify the USB-SSD is mounted as drive `E:`:
 
 ```powershell
 Test-Path "E:\"
@@ -175,7 +175,7 @@ Make sure the filename is exactly:
 backup_wsl.py
 ```
 
-It must not end up as:
+Avoid filenames like:
 
 ```text
 backup_wsl.py.txt
@@ -221,7 +221,7 @@ python .\backup_wsl.py --distro archlinux --backup-root D:\WSL-Backups
 
 Run `python .\backup_wsl.py --help` for the full list. The defaults are the `Ubuntu-24.04` distribution and `E:\WSL-Backups`.
 
-The script will automatically:
+The script automatically:
 
 1. Check that `wsl.exe` exists and that the backup drive is available.
 2. Check that the WSL distribution exists.
@@ -234,7 +234,7 @@ The script will automatically:
 
 If the export fails or is cancelled, the script deletes the incomplete file.
 
-The backup will look similar to:
+The backup filename will resemble:
 
 ```text
 E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar
@@ -262,7 +262,7 @@ tar -tf "E:\WSL-Backups\Ubuntu-24.04-backup-2026-09-18_14-30-00.tar" | Select-Ob
 
 Replace the filename with the actual backup filename.
 
-A backup is only proven good once you have imported it successfully. See step 7.
+A backup is only reliable after successful import. See step 7.
 
 ## 6. Start WSL Again
 
@@ -348,7 +348,7 @@ You should see something similar to:
 
 Once you have confirmed the backup works, remove the test copy so it does not keep using disk space.
 
-Warning: this permanently deletes the `Ubuntu-Restored` distribution and everything inside it. Double-check the name first. It does not affect `Ubuntu`.
+Warning: This permanently deletes the `Ubuntu-Restored` distribution and all its contents. Double-check the name first. It does not affect `Ubuntu`.
 
 ```powershell
 wsl --unregister Ubuntu-Restored
@@ -371,7 +371,7 @@ The result must be:
 True
 ```
 
-Do not continue if the result is `False`. Also make sure you have already tested this backup as described in step 7.
+Do not proceed if the result is `False`. Also make sure you have already tested this backup as described in step 7.
 
 Shut down WSL:
 
@@ -404,7 +404,7 @@ wsl --distribution Ubuntu-24.04
 
 ## 9. Set Your Normal Linux User After Import
 
-Imported WSL distributions may start as the `root` user.
+Imported WSL distributions may default to the `root` user.
 
 Check the current user:
 
@@ -424,7 +424,7 @@ Edit the WSL configuration:
 sudo nano /etc/wsl.conf
 ```
 
-Add the following configuration:
+Add this configuration:
 
 ```ini
 [user]
@@ -442,7 +442,7 @@ default=alex
 
 If the file already has a `[user]` section, edit it instead of adding a second one.
 
-Save the file:
+Save the file by:
 
 - Press `Ctrl+O`
 - Press `Enter`
@@ -484,7 +484,7 @@ If necessary, use:
 py .\backup_wsl.py
 ```
 
-Each run creates a new timestamped backup on the USB-SSD. Delete old backups you no longer need, since each one is a full copy of the distribution.
+Each run creates a new timestamped backup on the USB-SSD. Delete old backups to free up space, as each is a full copy of the distribution.
 
 ## Troubleshooting
 
@@ -507,7 +507,7 @@ The script matches the distribution name exactly (upper/lower case does not matt
 
    (Here the list showed `Ubuntu`, so that is the name to use.)
 
-If the name contains spaces, put it in quotes: `--distro "My Distro"`.
+For names with spaces, use quotes: `--distro "My Distro"`.
 
 If the name in the list is exactly the one you passed and the script still cannot find it, run this and keep the output:
 
@@ -515,7 +515,7 @@ If the name in the list is exactly the one you passed and the script still canno
 python -c "import subprocess; r=subprocess.run(['wsl.exe','--list','--quiet'],capture_output=True); print(r.returncode, r.stdout)"
 ```
 
-It shows the raw bytes the script receives from `wsl.exe`, which is what is needed to diagnose a decoding problem.
+This output helps diagnose decoding issues by showing the raw bytes received from `wsl.exe`.
 
 ### Error: The drive E: was not found
 
@@ -545,7 +545,7 @@ The script asks before shutting down WSL. Answer `y` to continue, or run it with
 - Do not disconnect the USB-SSD during the export.
 - Keep at least one backup on another drive if possible.
 - Test a backup with a separate import before relying on it.
-- Do not run `wsl --unregister` until you have verified the backup.
+- Verify the backup before running `wsl --unregister`.
 - `wsl --unregister` permanently deletes the selected WSL distribution.
 - The backup file can be large because it includes the entire Linux filesystem.
 - Create a new backup after major changes or installations.
